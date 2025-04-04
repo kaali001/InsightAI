@@ -62,7 +62,7 @@ Manual feedback review is slow, biased, and inefficient. InsightAI leverages Gen
 
 ---
 
-## 👨‍💻 Built By
+## 👨‍💻 To be built By
 
 - 🔧 Satyendra
 - 💡 Guided by GenAI mentor - Achyut Mohan sir (working @google)
