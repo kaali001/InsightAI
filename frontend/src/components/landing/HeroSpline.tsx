@@ -2,7 +2,7 @@ import Spline from '@splinetool/react-spline';
 
 const HeroSpline = () => {
   return (
-    <section className="relative w-full h-[95vh] overflow-hidden bg-gray-950 text-white">
+    <section className="relative w-full h-[100vh] overflow-hidden bg-gray-950 text-white">
       {/* Background 3D Spline */}
       <div className="absolute inset-0 z-0">
         <Spline scene="https://prod.spline.design/RYWb8rSncpjrQTy0/scene.splinecode" />

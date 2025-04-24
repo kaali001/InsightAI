@@ -2,7 +2,7 @@ import AddAppForm from "../../components/project/AddAppForm";
 
 const AddApp = () => {
   return (
-    <div className="p-6 max-w-3xl mx-auto">
+    <div className="mt-16 p-6 max-w-3xl mx-auto">
       <h1 className="text-3xl font-bold mb-6 text-gray-800 dark:text-white">
         Add a New App Project
       </h1>

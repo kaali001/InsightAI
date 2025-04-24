@@ -2,7 +2,7 @@
 
 const Privacy = () => {
   return (
-    <div className="p-6 max-w-3xl mx-auto">
+    <div className="mt-14 p-6 max-w-3xl mx-auto">
       <h1 className="text-3xl font-bold mb-4">Privacy Policy</h1>
       <p className="text-gray-600 mb-4">Your privacy is important to us. Please read the following to understand how we collect, use, and safeguard your data.</p>
       <h2 className="text-xl font-semibold mb-2">Information We Collect</h2>

@@ -31,7 +31,7 @@ export const Navbar = () => {
       <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
         {/* Logo */}
         <Link to="/" className="flex items-center gap-2">
-          <img src={logo} alt="InsightAI" className="h-8 w-8 object-contain" />
+          {/* <img src={logo} alt="InsightAI" className="h-8 w-8 object-contain" /> */}
           <span className="font-bold text-xl text-gray-900 dark:text-white">
             InsightAI
           </span>

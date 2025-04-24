@@ -2,7 +2,7 @@
 
 const GenerateReports = () => {
   return (
-    <div className="p-6">
+    <div className="mt-12 p-6">
       <h1 className="text-2xl font-bold mb-4">Generate Reports</h1>
       <p className="text-gray-600 mb-6">Generate detailed issue and feedback reports over custom time periods.</p>
       <div className="bg-white p-6 rounded shadow">

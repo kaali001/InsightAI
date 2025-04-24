@@ -2,7 +2,7 @@
 
 const AUP = () => {
   return (
-    <div className="p-6 max-w-3xl mx-auto">
+    <div className="mt-14 p-6 max-w-3xl mx-auto">
       <h1 className="text-3xl font-bold mb-4">Acceptable Use Policy</h1>
       <p className="text-gray-600 mb-4">This policy outlines the acceptable use of InsightAI's services and provides guidelines for users.</p>
       <h2 className="text-xl font-semibold mb-2">Prohibited Uses</h2>

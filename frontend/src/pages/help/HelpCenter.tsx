@@ -2,7 +2,7 @@
 
 const HelpCenter = () => {
   return (
-    <div className="p-6 max-w-3xl mx-auto">
+    <div className="mt-14 p-6 max-w-3xl mx-auto">
       <h1 className="text-3xl font-bold mb-4">Help Center</h1>
       <p className="text-gray-600 mb-4">Find answers to common questions and get assistance with any issues you're facing.</p>
       <h2 className="text-xl font-semibold mb-2">Frequently Asked Questions</h2>

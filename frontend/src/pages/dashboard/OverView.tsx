@@ -6,7 +6,7 @@ import KeywordBar from "../../components/charts/KeywordBar";
 
 const Overview = () => {
   return (
-    <div className="p-6 space-y-6">
+    <div className="mt-14 p-6 space-y-6">
       <h1 className="text-2xl font-bold">Dashboard Overview</h1>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <Card title="Total Comments">8,432</Card>

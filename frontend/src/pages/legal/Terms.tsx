@@ -2,7 +2,7 @@
 
 const Terms = () => {
   return (
-    <div className="p-6 max-w-3xl mx-auto">
+    <div className="mt-14 p-6 max-w-3xl mx-auto">
       <h1 className="text-3xl font-bold mb-4">Terms of Service</h1>
       <p className="text-gray-600 mb-4">By accessing and using InsightAI, you agree to comply with the following terms and conditions.</p>
       <h2 className="text-xl font-semibold mb-2">Usage Guidelines</h2>
