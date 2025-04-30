@@ -1,42 +1,19 @@
-// src/components/ui/Button.tsx
-import React from "react";
-import { cn } from "../../lib/utils";
+// components/ui/Button.tsx
+import React from 'react';
+import Spinner from './Spinner';
 
-type ButtonProps = React.ButtonHTMLAttributes<HTMLButtonElement> & {
-  variant?: "primary" | "secondary" | "ghost";
-  size?: "sm" | "md" | "lg";
-};
+interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
+  loading?: boolean;
+}
 
-const sizeClasses = {
-  sm: "text-sm px-3 py-1.5",
-  md: "text-base px-4 py-2",
-  lg: "text-lg px-6 py-3",
-};
-
-const variantClasses = {
-  primary: "bg-blue-600 text-white hover:bg-blue-700",
-  secondary: "bg-gray-200 text-black hover:bg-gray-300",
-  ghost: "bg-transparent hover:bg-black/10 text-gray-900 dark:text-white"
-
-};
-
-const Button: React.FC<ButtonProps> = ({
-  children,
-  className,
-  variant = "primary",
-  size = "md",
-  ...props
-}) => {
+const Button: React.FC<ButtonProps> = ({ children, loading, className = '', ...props }) => {
   return (
     <button
-      className={cn(
-        "rounded font-medium transition duration-200",
-        variantClasses[variant],
-        sizeClasses[size],
-        className
-      )}
+      className={`inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 transition-all duration-200 ${className} ${props.disabled ? 'opacity-70 cursor-not-allowed' : ''}`}
+      disabled={loading || props.disabled}
       {...props}
     >
+      {loading && <Spinner className="mr-2" />}
       {children}
     </button>
   );

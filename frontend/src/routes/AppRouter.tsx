@@ -57,7 +57,7 @@ const AppRouter = () => {
       {/* 🔐 Auth */}
       <Route path="/login" element={<Login />} />
       <Route path="/signup" element={<Signup />} />
-      <Route path="/reset" element={<ResetPassword />} />
+      <Route path="/reset-password" element={<ResetPassword />} />
       <Route path="/verify" element={<VerifyEmail />} />
 
       {/* 📊 Core App */}

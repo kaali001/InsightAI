@@ -58,7 +58,7 @@ export const Navbar = () => {
         <div className="flex items-center gap-3">
           <Link to="/login">
             <Button
-              size="sm"
+              
               className="text-gray-800 dark:text-white bg-gray-100/20 hover:bg-gray-100/20 border border-gray-300 dark:border-white/30"
             >
               Log In
@@ -66,7 +66,7 @@ export const Navbar = () => {
           </Link>
           <Link to="/signup">
             <Button
-              size="sm"
+              
               className="bg-white text-gray-800 shadow-md hover:bg-white"
             >
               Sign Up

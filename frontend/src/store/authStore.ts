@@ -1,6 +1,8 @@
 // src/store/authStore.ts
 import { create } from 'zustand';
 
+const BASE_URL = import.meta.env.VITE_BACKEND_URL;
+
 type AuthState = {
   login: (email: string, password: string) => Promise<void>;
   signup: (name: string, email: string, password: string) => Promise<void>;
@@ -9,7 +11,7 @@ type AuthState = {
 export const useAuthStore = create<AuthState>((set) => ({
   login: async (email, password) => {
     try {
-      const res = await fetch('/api/auth/login', {
+      const res = await fetch(`${BASE_URL}/api/auth/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password }),
@@ -27,7 +29,7 @@ export const useAuthStore = create<AuthState>((set) => ({
 
   signup: async (name, email, password) => {
     try {
-      const res = await fetch('/api/auth/signup', {
+      const res = await fetch(`${BASE_URL}/api/auth/signup`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name, email, password }),
