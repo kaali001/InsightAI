@@ -4,8 +4,8 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useAuthStore } from '../../store/authStore';
 import { signupSchema } from '../../lib/auth';
-import Input from '../../components/ui/Input';
-import Button from '../../components/ui/Button';
+import Input from '@/components/ui/Input';
+import { Button } from '@/components/ui/Button';
 import { Link } from 'react-router-dom';
 import { AuthCard } from './AuthCard';
 import { AuthLayout } from './AuthLayout';
@@ -88,7 +88,7 @@ const Signup: React.FC = () => {
           <Button 
             type="submit" 
             className="w-full mt-6 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white py-3 px-4 rounded-lg shadow-md hover:shadow-lg transition-all duration-300"
-            loading={isSubmitting}
+            // loading={isSubmitting}
           >
             Get Started
           </Button>

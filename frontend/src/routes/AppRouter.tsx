@@ -1,4 +1,6 @@
-import { Routes, Route } from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import PrivateRoute from "@/components/auth/privateRoute";
+
 
 // Public Pages
 import Landing from "../pages/marketing/Landing";
@@ -15,10 +17,11 @@ import ResetPassword from "../pages/auth/ResetPassword";
 import VerifyEmail from "../pages/auth/VerifyEmail";
 
 // Dashboard & Core
-import Overview from "../pages/dashboard/OverView";
-import Clusters from "../pages/dashboard/Clusters";
-import Sentiment from "../pages/dashboard/Sentiment";
-import Keywords from "../pages/dashboard/Keywords";
+import Dashboard from "../pages/dashboard/Dashboard";
+import Overview from "@/pages/dashboard/OverView";
+// import Clusters from "../pages/dashboard/Clusters";
+// import Sentiment from "../pages/dashboard/Sentiment";
+// import Keywords from "../pages/dashboard/Keywords";
 
 // Projects & Upload
 import ListProjects from "../pages/projects/ListProjects";
@@ -61,10 +64,12 @@ const AppRouter = () => {
       <Route path="/verify" element={<VerifyEmail />} />
 
       {/* 📊 Core App */}
-      <Route path="/dashboard" element={<Overview />} />
-      <Route path="/dashboard/clusters" element={<Clusters />} />
+      <Route path="/dashboard" element={<PrivateRoute><Dashboard /></PrivateRoute>} />
+      <Route path="/dashboard/overview/:projectId" element={<PrivateRoute><Overview /></PrivateRoute>} 
+      />
+      {/* <Route path="/dashboard/clusters" element={<Clusters />} />
       <Route path="/dashboard/sentiment" element={<Sentiment />} />
-      <Route path="/dashboard/keywords" element={<Keywords />} />
+      <Route path="/dashboard/keywords" element={<Keywords />} /> */}
 
       {/* 📦 Projects & Upload */}
       <Route path="/projects" element={<ListProjects />} />

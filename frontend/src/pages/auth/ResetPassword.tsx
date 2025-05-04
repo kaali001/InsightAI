@@ -3,8 +3,8 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { resetPasswordSchema } from '../../lib/auth';
-import Input from '../../components/ui/Input';
-import Button from '../../components/ui/Button';
+import Input from '@/components/ui/Input';
+import { Button } from '@/components/ui/Button';
 import { Link } from 'react-router-dom';
 import { AuthCard } from './AuthCard';
 import { AuthLayout } from './AuthLayout';
@@ -45,7 +45,7 @@ const ResetPassword: React.FC = () => {
           <Button 
             type="submit" 
             className="w-full mt-6 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white py-3 px-4 rounded-lg shadow-md hover:shadow-lg transition-all duration-300"
-            loading={isSubmitting}
+            // loading={isSubmitting}
           >
             Send Reset Link
           </Button>

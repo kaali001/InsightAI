@@ -11,8 +11,8 @@ from datetime import datetime
 from app.utils.scraper import fetch_all_reviews
 from app.utils.nlp import cluster_feedbacks, summarize_feedbacks, label_feedbacks
 
-router = APIRouter(prefix="/feedbacks", tags=["Feedbacks"])
-# router = APIRouter()
+# router = APIRouter(prefix="/feedbacks", tags=["Feedbacks"])
+router = APIRouter()
 
 @router.post("/upload-csv")
 async def upload_csv(file: UploadFile = File(...)):

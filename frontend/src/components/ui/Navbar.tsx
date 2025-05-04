@@ -1,8 +1,8 @@
 import { Link, useLocation } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { cn } from "../../lib/utils";
-import logo from "../../assets/logo.png";
-import Button from "./Button";
+// import logo from "../../assets/logo.png";
+// import { Button } from "./Button";
 
 export const Navbar = () => {
   const location = useLocation();
@@ -57,20 +57,20 @@ export const Navbar = () => {
         {/* CTA Buttons */}
         <div className="flex items-center gap-3">
           <Link to="/login">
-            <Button
+            <button
               
-              className="text-gray-800 dark:text-white bg-gray-100/20 hover:bg-gray-100/20 border border-gray-300 dark:border-white/30"
+              className="inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 transition-all duration-200 text-gray-800 dark:text-white bg-gray-100/20 hover:bg-gray-100/20  border-gray-300 dark:border-white/30"
             >
               Log In
-            </Button>
+            </button>
           </Link>
           <Link to="/signup">
-            <Button
+            <button
               
-              className="bg-white text-gray-800 shadow-md hover:bg-white"
+              className="inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 transition-all duration-200 bg-white text-gray-800 shadow-md hover:bg-white"
             >
               Sign Up
-            </Button>
+            </button>
           </Link>
         </div>
       </div>

@@ -1,23 +1,46 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useAuthStore } from '../../store/authStore';
 import { loginSchema } from '../../lib/auth';
-import Input from '../../components/ui/Input';
-import Button from '../../components/ui/Button';
+import Input from '@/components/ui/Input';
+import { Button } from '@/components/ui/Button';
 import { Link } from 'react-router-dom';
 import { AuthCard } from './AuthCard';
 import { AuthLayout } from './AuthLayout';
+import { useNavigate } from 'react-router-dom';
+import { toast } from 'sonner';
+
 
 const Login: React.FC = () => {
-  const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm({
+  const navigate = useNavigate();
+  const login = useAuthStore((state) => state.login);
+  const token = useAuthStore((state) => state.token);
+
+  
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isSubmitting }
+  } = useForm({
     resolver: zodResolver(loginSchema),
   });
-  const login = useAuthStore((state) => state.login);
+
+  useEffect(() => {
+    if (token) {
+      navigate("/dashboard");
+    }
+  }, [token, navigate]);
 
   const onSubmit = async (data: z.infer<typeof loginSchema>) => {
-    await login(data.email, data.password);
+    try {
+      await login(data.email, data.password);
+      // navigate("/dashboard");
+    } catch (err: any) {
+      console.error("Login failed", err);
+      toast.error(err.message || "Invalid credentials");
+    }
   };
 
   return (
@@ -75,7 +98,7 @@ const Login: React.FC = () => {
           <Button 
             type="submit" 
             className="w-full mt-6 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white py-3 px-4 rounded-lg shadow-md hover:shadow-lg transition-all duration-300"
-            loading={isSubmitting}
+            // loading={isSubmitting}
           >
             Sign In
           </Button>

@@ -9,7 +9,7 @@ interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
 }
 
 const Input = forwardRef<HTMLInputElement, InputProps>(({ label, error, icon, className = '', ...props }, ref) => {
-  return (
+    return (
     <div>
       {label && (
         <label htmlFor={props.id} className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
@@ -23,10 +23,10 @@ const Input = forwardRef<HTMLInputElement, InputProps>(({ label, error, icon, cl
           </div>
         )}
         <input
-          ref={ref}
+        ref={ref}
           className={`block w-full ${icon ? 'pl-10' : 'pl-3'} pr-3 py-2 border ${error ? 'border-red-300 text-red-900 placeholder-red-300 focus:outline-none focus:ring-red-500 focus:border-red-500' : 'border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500'} rounded-md shadow-sm transition duration-200 ${className}`}
-          {...props}
-        />
+        {...props}
+      />
         {error && (
           <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
             <ExclamationCircleIcon className="h-5 w-5 text-red-500" aria-hidden="true" />
