@@ -8,6 +8,8 @@ import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, CartesianGrid, Toolti
 import { useParams, useNavigate } from 'react-router-dom';
 import { fetchProjects, fetchAnalysis } from '@/lib/api';
 import { toast } from 'sonner';
+import { generatePdfReport } from '@/lib/pdfGenerator';
+import "@/styles/pdf-styles.css";
 
 interface Project {
   _id: string;
@@ -19,14 +21,26 @@ interface Project {
   last_scraped?: string;
 }
 
+interface ClusterData {
+  summary: string;
+  count: number;
+  feedbacks: string[];
+}
+
 interface AnalysisData {
   total_feedbacks: number;
   sentiment: {
     positive: number;
     negative: number;
     neutral: number;
+    critical_issues: number;
+    critical_feedbacks: Array<{  
+      text: string;
+      score: number;
+      keywords: string[];
+    }>;
   };
-  clusters: Record<string, string[]>;
+  clusters: Record<string, ClusterData>;
   timestamp: string;
   [key: string]: any;
 }
@@ -97,26 +111,28 @@ const Overview = () => {
   // Chart data
   const sentimentData = analysisData?.sentiment ? [
     { name: 'Positive', value: analysisData.sentiment.positive, color: '#4ade80' },
-    { name: 'Negative', value: analysisData.sentiment.negative, color: '#f87171' },
-    { name: 'Neutral', value: analysisData.sentiment.neutral, color: '#94a3b8' }
+    { name: 'Negative', value: analysisData.sentiment.negative, color: '#f8a971' },
+    { name: 'Neutral', value: analysisData.sentiment.neutral, color: '#94a3b8' },
+    { name: 'Critical_issues', value: analysisData.sentiment.critical_issues, color: '#e30000' }
   ] : [];
 
   const clusterData = analysisData?.clusters ? 
     Object.entries(analysisData.clusters).map(([key, value]) => ({
       id: key,
-      name: `Cluster ${key}`,
-      count: value.length,
-      feedbacks: value
+      name: value.summary,
+      count: value.count,
+      feedbacks: value.feedbacks
     })) : [];
 
   const sentiment = analysisData?.sentiment || { 
       positive: 0, 
       negative: 0, 
-      neutral: 0 
+      neutral: 0,
+      critical_issues: 0
     };
 
   return (
-    <div className="space-y-6 p-6">
+    <div className="space-y-6 p-6" id="overview-report">
       <div className="flex justify-between items-center flex-wrap gap-4">
         <h2 className="text-2xl font-bold">Project Insights</h2>
 
@@ -224,20 +240,74 @@ const Overview = () => {
                 </CardHeader>
                 <CardContent>
                   <div className="text-xl font-bold">
-                    {
-                      clusterData.filter((cluster) =>
-                        cluster.feedbacks.some(
-                          (fb) =>
-                            fb.toLowerCase().includes("crash") ||
-                            fb.toLowerCase().includes("fail")
-                        )
-                      ).length
-                    }
+                    {analysisData.sentiment.critical_issues || 0}
                   </div>
                   <p className="text-sm text-gray-500">Urgent problems</p>
                 </CardContent>
               </Card>
             </div>
+
+            {/* Critical issues Section */}
+            {analysisData.sentiment.critical_issues > 0 && (
+              <Card className="border-red-200 bg-red-50">
+                <CardHeader>
+                  <CardTitle className="text-red-600">
+                    🚨 Critical Issues ({analysisData.sentiment.critical_issues}
+                    )
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  {analysisData.sentiment.critical_feedbacks.length > 0 ? (
+                    <Accordion type="multiple">
+                      {analysisData.sentiment.critical_feedbacks.map(
+                        (issue, index) => (
+                          <AccordionItem
+                            key={`critical-${index}`}
+                            value={`critical-${index}`}
+                          >
+                            <AccordionTrigger>
+                              <div className="flex items-center gap-4 w-full">
+                                <span className="text-red-700 font-medium flex-1 text-left">
+                                  {issue.text.substring(0, 80)}...
+                                </span>
+                                <div className="flex gap-2">
+                                  {issue.keywords.map((kw, kwIndex) => (
+                                    <span
+                                      key={kwIndex}
+                                      className="px-2 py-1 bg-red-100 text-red-800 text-xs rounded-full"
+                                    >
+                                      {kw}
+                                    </span>
+                                  ))}
+                                </div>
+                              </div>
+                            </AccordionTrigger>
+                            <AccordionContent>
+                              <div className="space-y-2 pl-4">
+                                <p className="text-red-900">{issue.text}</p>
+                                <div className="flex gap-4 text-sm">
+                                  <span className="text-red-600">
+                                    Severity:{" "}
+                                    {(Math.abs(issue.score) * 100).toFixed(0)}%
+                                  </span>
+                                  <span className="text-red-600">
+                                    Keywords: {issue.keywords.join(", ")}
+                                  </span>
+                                </div>
+                              </div>
+                            </AccordionContent>
+                          </AccordionItem>
+                        )
+                      )}
+                    </Accordion>
+                  ) : (
+                    <div className="text-green-600 p-4 text-center">
+                      🎉 No critical issues found in this period
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            )}
 
             {/* Charts Section */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -291,41 +361,49 @@ const Overview = () => {
               </CardHeader>
               <CardContent>
                 <Accordion type="multiple">
-                  {clusterData.map((cluster) => (
-                    <AccordionItem key={cluster.id} value={cluster.id}>
-                      <AccordionTrigger>
-                        <div className="flex items-center gap-4">
-                          <span className="text-sm font-medium">
-                            {cluster.name}
-                          </span>
-                          <span className="text-gray-500 text-sm">
-                            {cluster.count} feedbacks
-                          </span>
-                        </div>
-                      </AccordionTrigger>
-                      <AccordionContent>
-                        <div className="space-y-4">
-                          <p className="font-medium">Sample Feedbacks:</p>
-                          <ul className="space-y-2">
-                            {cluster.feedbacks
-                              .slice(0, 5)
-                              .map((feedback, index) => (
-                                <li key={index} className="text-gray-600">
-                                  • {feedback}
-                                </li>
-                              ))}
-                          </ul>
-                        </div>
-                      </AccordionContent>
-                    </AccordionItem>
-                  ))}
+                  {Object.entries(analysisData.clusters).map(
+                    ([clusterId, cluster]) => (
+                      <AccordionItem key={clusterId} value={clusterId}>
+                        <AccordionTrigger>
+                          <div className="flex items-center gap-4">
+                            <span className="text-sm font-medium">
+                              {cluster.summary}
+                            </span>
+                            <span className="text-gray-500 text-sm">
+                              {cluster.count} feedbacks
+                            </span>
+                          </div>
+                        </AccordionTrigger>
+                        <AccordionContent>
+                          <div className="space-y-4">
+                            <p className="font-medium">Sample Feedbacks:</p>
+                            <ul className="space-y-2">
+                              {cluster.feedbacks
+                                .slice(0, 5)
+                                .map((feedback, index: number) => (
+                                  <li key={index} className="text-gray-600">
+                                    • {feedback}
+                                  </li>
+                                ))}
+                            </ul>
+                          </div>
+                        </AccordionContent>
+                      </AccordionItem>
+                    )
+                  )}
                 </Accordion>
               </CardContent>
             </Card>
 
             <div className="flex gap-4">
               <Button variant="outline">Regenerate Insights</Button>
-              <Button>Download Full Report (PDF)</Button>
+              <Button
+                onClick={() =>
+                  generatePdfReport("overview-report", "insight-report")
+                }
+              >
+                Download Full Report (PDF)
+              </Button>
             </div>
           </div>
         )

@@ -8,6 +8,12 @@ from sklearn.cluster import KMeans
 from collections import Counter
 import logging
 from openai import AsyncOpenAI
+from langdetect import detect
+from textblob import TextBlob
+import numpy as np
+from keybert import KeyBERT
+
+
 
 logger = logging.getLogger(__name__)
 
@@ -92,13 +98,24 @@ async def gpt_labeling(feedbacks: List[str]) -> Dict[str, List[str]]:
 async def cluster_feedbacks(feedbacks: List[str]) -> Dict[int, List[str]]:
     """Adaptive clustering strategy"""
     try:
+        if len(feedbacks) < 2:
+            return {0: {"feedbacks": feedbacks, "summary": "All feedbacks", "count": len(feedbacks)}}
+        
         if GPT_ENABLED and len(feedbacks) <= 20:
             try:
                 return await gpt_clustering(feedbacks)
             except Exception as e:
                 logger.warning(f"GPT clustering failed: {e}")
         
-        return await run_in_executor(kmeans_clustering, feedbacks)
+        embeddings = await run_in_executor(embedding_model.encode, feedbacks)
+        # Cluster and summarize
+        clusters = await run_in_executor(
+            generate_cluster_names,
+            feedbacks,
+            embeddings
+        )
+        
+        return clusters
         
     except Exception as e:
         logger.error(f"All clustering failed: {e}")
@@ -154,6 +171,50 @@ def kmeans_clustering(feedbacks: List[str]) -> Dict[int, List[str]]:
     kmeans = KMeans(n_clusters=min(5, len(feedbacks)), n_init=10)
     clusters = kmeans.fit_predict(embeddings)
     return {i: [feedbacks[idx] for idx in cluster] for i, cluster in enumerate(clusters)}
+
+def generate_cluster_names(feedbacks: List[str], embeddings: np.ndarray) -> Dict[int, dict]:
+    """Generate meaningful cluster names using KeyBERT"""
+    kw_model = KeyBERT()
+    clusters = {}
+    
+    # First pass clustering
+    kmeans = KMeans(n_clusters=min(5, len(feedbacks)), n_init=10)
+    labels = kmeans.fit_predict(embeddings)
+    
+    unique_labels = np.unique(labels).tolist()
+
+    # Cluster processing
+    for cluster_id in unique_labels:
+        # Convert numpy.int64 to int
+        py_cluster_id = int(cluster_id)
+        
+        cluster_texts = [
+            str(feedbacks[i])  # Ensure text is string
+            for i, x in enumerate(labels) 
+            if x == cluster_id
+        ]
+        # Fallback summary methods
+        try:
+            keywords = kw_model.extract_keywords(
+                " ".join(cluster_texts), 
+                keyphrase_ngram_range=(1, 2),
+                stop_words='english',
+                top_n=3
+            )
+            # Convert float scores to strings for JSON safety
+            summary = ", ".join([f"{kw[0]}" for kw in keywords])
+        except Exception as e:
+            logger.warning(f"KeyBERT failed: {e}")
+            summary = basic_stats_summary(cluster_texts)
+        
+        clusters[py_cluster_id] = {
+            "feedbacks": cluster_texts,
+            "summary": str(summary),  # Ensure string type
+            "count": int(len(cluster_texts))  # Convert to native int
+        }
+    
+    return clusters
+
 
 def basic_stats_summary(feedbacks: List[str]) -> str:
     """Simple word frequency fallback"""
@@ -223,3 +284,57 @@ def parse_gpt_clusters(gpt_response: str) -> Dict[int, List[str]]:
             clusters[current_cluster].append(line)
 
     return clusters
+
+
+
+def analyze_sentiment(feedbacks: List[str]) -> dict:
+    """Multilingual sentiment analysis using TextBlob"""
+    positive = 0
+    negative = 0
+    neutral = 0
+    critical_issues = []
+    
+    for text in feedbacks:
+        try:
+            # Skip empty feedback
+            if not text.strip():
+                neutral += 1
+                continue
+                
+            lang = detect(text[:500])  # Limit text size for language detection
+            analysis = TextBlob(text)
+            
+            # Translate non-English text if possible
+            if lang != 'en':
+                try:
+                    analysis = analysis.translate(to='en')
+                except Exception as e:
+                    logger.debug(f"Translation failed for {lang} text: {e}")
+                    pass  # Use original text if translation fails
+            
+            polarity = analysis.sentiment.polarity
+            
+            if polarity > 0.1:
+                positive += 1
+            elif polarity < -0.1:
+                negative += 1
+            elif polarity < -0.3 or any(kw in text.lower() for kw in ["crash", "error", "bug", "fix"]):
+                critical_issues.append({
+                "text": text,
+                "score": polarity,
+                "keywords": [kw for kw in ["crash", "error", "bug", "fix"] if kw in text.lower()]
+                })
+            else:
+                neutral += 1
+        except Exception as e:
+            logger.debug(f"Sentiment analysis failed for text: {text[:50]}... Error: {e}")
+            neutral += 1  # Count as neutral if analysis fails
+    
+    total = max(1, len(feedbacks))  # Prevent division by zero
+    return {
+        'positive': round(positive/total * 100),
+        'negative': round(negative/total * 100),
+        'neutral': round(neutral/total * 100),
+        'critical_issues': len(critical_issues),
+        'critical_feedbacks': critical_issues
+    }

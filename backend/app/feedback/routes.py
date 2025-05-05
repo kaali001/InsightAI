@@ -9,7 +9,7 @@ from typing import Optional
 from datetime import datetime
 
 from app.utils.scraper import fetch_all_reviews
-from app.utils.nlp import cluster_feedbacks, summarize_feedbacks, label_feedbacks
+from app.utils.nlp import cluster_feedbacks, summarize_feedbacks, label_feedbacks, analyze_sentiment
 
 # router = APIRouter(prefix="/feedbacks", tags=["Feedbacks"])
 router = APIRouter()
@@ -60,12 +60,16 @@ async def fetch_and_analyze_feedbacks(
         app_store_app_id=app_store_app_id,
         days=days
     )
-    print("reviews:",reviews[0:5])
+    # print("reviews:",reviews[0:5])
     if not reviews:
         raise HTTPException(status_code=404, detail="No feedbacks found.")
 
     
     texts = [review["content"] for review in reviews]
+
+
+  # sentiment analysis
+    sentiment = analyze_sentiment(texts)
 
   # Parallel processing
     summary, labels, clusters = await asyncio.gather(
@@ -84,5 +88,6 @@ async def fetch_and_analyze_feedbacks(
         "total_feedbacks": len(reviews),
         "summary": summary,
         "clusters": clusters,
-        "labeled_feedbacks": reviews
+        "labeled_feedbacks": reviews,
+        "sentiment": sentiment 
     }

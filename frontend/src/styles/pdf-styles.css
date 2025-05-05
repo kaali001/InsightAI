@@ -1,0 +1,22 @@
+@media print {
+    body {
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
+    }
+  }
+  
+  /* Ensure charts are visible in PDF */
+  .recharts-surface {
+    background-color: white !important;
+  }
+  
+  /* Improve text readability in PDF */
+  #overview-report {
+    background-color: white;
+    color: #1a1a1a;
+  }
+  
+  #overview-report .recharts-wrapper,
+  #overview-report .recharts-surface {
+    background-color: white !important;
+  }
