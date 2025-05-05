@@ -3,6 +3,8 @@
 ![InsightAI Banner](https://img.shields.io/badge/GenAI-Feedback--Summarizer-blueviolet?style=for-the-badge)  
 > ✨ Your smart assistant for extracting insights from user feedback ✨
 
+![image](https://github.com/user-attachments/assets/11fcfa28-75bc-4285-bd8b-f22c6c98e924)
+
 ---
 
 ## 🎯 Objective
