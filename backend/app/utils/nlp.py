@@ -12,9 +12,9 @@ from langdetect import detect
 from textblob import TextBlob
 import numpy as np
 from keybert import KeyBERT
+from dotenv import load_dotenv
 
-
-
+load_dotenv()
 logger = logging.getLogger(__name__)
 
 # Initialize async OpenAI client
