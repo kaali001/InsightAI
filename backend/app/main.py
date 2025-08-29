@@ -14,7 +14,7 @@ app = FastAPI(title="InsightAI Backend")
 # CORS settings
 frontend_url = os.getenv("FRONTEND_URL", "http://localhost:5173")
 
-print(frontend_url)
+# print(frontend_url)            
 origins = [
     frontend_url,
 ]
@@ -37,4 +37,5 @@ async def root():
 # # Dynamic port binding for deployment
 if __name__ == "__main__":
     port = int(os.getenv("PORT", 8000)) 
+    print(port)
     uvicorn.run("app.main:app", host="0.0.0.0", port=port, reload=True)
