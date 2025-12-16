@@ -10,18 +10,27 @@ import logging
 from dotenv import load_dotenv
 import uvicorn
 
-# Initialize logging first
-from app.core.logging_config import setup_logging
-setup_logging(log_level=os.getenv("LOG_LEVEL", "INFO"))
+load_dotenv()
+
+# Initialize logging - skip file logging in production if logs dir doesn't exist
+try:
+    from app.core.logging_config import setup_logging
+    setup_logging(log_level=os.getenv("LOG_LEVEL", "INFO"))
+except Exception as e:
+    # Fallback to basic logging if file logging fails
+    logging.basicConfig(level=logging.INFO)
+    print(f"Warning: File logging setup failed: {e}")
 
 logger = logging.getLogger(__name__)
-
-load_dotenv()
 
 # Import rate limiter
 from app.core.rate_limiter import limiter
 
-app = FastAPI(title="InsightAI Backend")
+app = FastAPI(
+    title="InsightAI Backend",
+    description="AI-powered feedback analysis API",
+    version="1.0.0"
+)
 
 # Add rate limiter to app state
 app.state.limiter = limiter
@@ -64,8 +73,12 @@ async def health_check():
 
 @app.on_event("startup")
 async def startup_event():
-    logger.info("InsightAI Backend starting up...")
-    logger.info(f"Environment: {os.getenv('ENV', 'development')}")
+    port = os.getenv("PORT", "8000")
+    env = os.getenv("ENV", "development")
+    logger.info(f"InsightAI Backend starting up...")
+    logger.info(f"Environment: {env}")
+    logger.info(f"Port: {port}")
+    logger.info(f"Configured origins: {origins}")
 
 @app.on_event("shutdown")
 async def shutdown_event():
