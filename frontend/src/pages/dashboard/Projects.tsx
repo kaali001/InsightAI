@@ -2,20 +2,9 @@ import { useState, useEffect } from 'react';
 import { Plus } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import AddProject from './components/AddProjects';
-import { fetchProjects } from '@/lib/api';
+import { fetchProjects, Project } from '@/lib/api';
 import { toast } from 'sonner';
 import { Link } from 'react-router-dom';
-
-interface Project {
-  last_scraped: any;
-  google_play_app_id: any;
-  app_store_app_id: any;
-  _id: string;
-  name: string;
-  createdAt: string;
-  platform: string;
-  appId: string;
-}
 
 const Projects = () => {
   const [showAddProject, setShowAddProject] = useState(false);
@@ -23,25 +12,26 @@ const Projects = () => {
   const [loading, setLoading] = useState(true);
 
   // Fetch projects from backend
-  const FetchProjects = async () => {
+  const loadProjects = async () => {
     try {
+      setLoading(true);
       const data = await fetchProjects();
       setProjects(data);
     } catch (error) {
-      toast.error('Failed to load projects');
+      const message = error instanceof Error ? error.message : 'Failed to load projects';
+      toast.error(message);
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    FetchProjects();
+    loadProjects();
   }, []);
 
   const handleProjectCreated = (newProject: Project) => {
     setProjects(prev => [...prev, newProject]);
     setShowAddProject(false);
-    toast.success('Project created successfully!');
   };
 
   if (loading) {

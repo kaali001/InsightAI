@@ -69,15 +69,27 @@ export const useAuthStore = create<AuthState>((set) => ({
       const res = await fetch(`${BASE_URL}/api/auth/signup`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, email, password }),
+        body: JSON.stringify({ email, password }), // Backend doesn't use 'name'
       });
 
       if (!res.ok) {
         const errorData = await res.json();
-        throw new Error(errorData.detail || 'Signup failed'); // ✅ better error message
+        throw new Error(errorData.detail || 'Signup failed');
       }
 
-      console.log("✅ Signup successful");
+      const data = await res.json();
+      const token = data.access_token;
+
+      if (token) {
+        localStorage.setItem('access_token', token);
+        set({
+          token,
+          isAuthenticated: true,
+        });
+        console.log("✅ Signup successful");
+      } else {
+        throw new Error('No token received from signup');
+      }
     } catch (error) {
       console.error("❌ Signup error:", error);
       throw error;

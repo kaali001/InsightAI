@@ -6,51 +6,17 @@ import { Progress } from '@/components/ui/progress';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { useParams, useNavigate } from 'react-router-dom';
-import { fetchProjects, fetchAnalysis } from '@/lib/api';
+import { fetchProjects, fetchAnalysis, Project, AnalysisResponse } from '@/lib/api';
 import { toast } from 'sonner';
 import { generatePdfReport } from '@/lib/pdfGenerator';
 import "@/styles/pdf-styles.css";
 
-interface Project {
-  _id: string;
-  name: string;
-  google_play_app_id?: string;
-  app_store_app_id?: string;
-  createdAt: string;
-  platform: string;
-  last_scraped?: string;
-}
-
-interface ClusterData {
-  summary: string;
-  count: number;
-  feedbacks: string[];
-}
-
-interface AnalysisData {
-  total_feedbacks: number;
-  sentiment: {
-    positive: number;
-    negative: number;
-    neutral: number;
-    critical_issues: number;
-    critical_feedbacks: Array<{  
-      text: string;
-      score: number;
-      keywords: string[];
-    }>;
-  };
-  clusters: Record<string, ClusterData>;
-  timestamp: string;
-  [key: string]: any;
-}
-
 const Overview = () => {
-  const { projectId } = useParams();
+  const { projectId } = useParams<{ projectId: string }>();
   const navigate = useNavigate();
-  const [timePeriod, setTimePeriod] = useState("weekly");
+  const [timePeriod, setTimePeriod] = useState<'daily' | 'weekly' | 'monthly'>("weekly");
   const [projects, setProjects] = useState<Project[]>([]);
-  const [analysisData, setAnalysisData] = useState<AnalysisData | null>(null);
+  const [analysisData, setAnalysisData] = useState<AnalysisResponse | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -61,8 +27,9 @@ const Overview = () => {
         const data = await fetchProjects();
         setProjects(data);
       } catch (error) {
-        toast.error("Failed to load projects");
-        setError("Failed to load projects");
+        const message = error instanceof Error ? error.message : "Failed to load projects";
+        toast.error(message);
+        setError(message);
       }
     };
     loadProjects();
@@ -75,12 +42,19 @@ const Overview = () => {
 
       try {
         setIsLoading(true);
-        const selectedProject = projects.find(p => p._id === projectId);
+        setError(null);
+        
+        const selectedProject = projects.find(p => p._id === projectId || p.id === projectId);
         
         if (!selectedProject) {
           toast.error('Project not found');
           navigate('/dashboard/projects');
           return;
+        }
+
+        // Validate that project has at least one app ID
+        if (!selectedProject.google_play_app_id && !selectedProject.app_store_app_id) {
+          throw new Error('This project has no app IDs configured');
         }
 
         const analysis = await fetchAnalysis(
@@ -89,15 +63,12 @@ const Overview = () => {
           timePeriod
         );
         
-        if (!analysis.sentiment) {
-          throw new Error('Missing sentiment data in response');
-        }
-        
         setAnalysisData(analysis);
+        setError(null);
       } catch (error) {
-        const message = error instanceof Error ? error.message : "Unknown error";
+        const message = error instanceof Error ? error.message : "Failed to load analysis";
         setError(message);
-        toast.error('Failed to load analysis');
+        toast.error(message);
       } finally {
         setIsLoading(false);
       }

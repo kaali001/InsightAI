@@ -3,7 +3,6 @@ from typing import List, Dict, Optional
 import os
 import openai
 import asyncio
-from sentence_transformers import SentenceTransformer
 from sklearn.cluster import KMeans
 from collections import Counter
 import logging
@@ -20,7 +19,17 @@ logger = logging.getLogger(__name__)
 # Initialize async OpenAI client
 client = AsyncOpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 GPT_ENABLED = bool(os.getenv("OPENAI_API_KEY"))
-embedding_model = SentenceTransformer('all-MiniLM-L6-v2')
+
+# Lazy load embedding model to speed up startup
+_embedding_model = None
+
+def get_embedding_model():
+    """Lazy load SentenceTransformer model"""
+    global _embedding_model
+    if _embedding_model is None:
+        from sentence_transformers import SentenceTransformer
+        _embedding_model = SentenceTransformer('all-MiniLM-L6-v2')
+    return _embedding_model
 
 # -----------------------
 # Summarization
@@ -107,6 +116,7 @@ async def cluster_feedbacks(feedbacks: List[str]) -> Dict[int, List[str]]:
             except Exception as e:
                 logger.warning(f"GPT clustering failed: {e}")
         
+        embedding_model = get_embedding_model()
         embeddings = await run_in_executor(embedding_model.encode, feedbacks)
         # Cluster and summarize
         clusters = await run_in_executor(
@@ -167,6 +177,7 @@ def keyword_labeling(feedbacks: List[str]) -> Dict[str, List[str]]:
 
 def kmeans_clustering(feedbacks: List[str]) -> Dict[int, List[str]]:
     """CPU-bound clustering fallback"""
+    embedding_model = get_embedding_model()
     embeddings = embedding_model.encode(feedbacks)
     kmeans = KMeans(n_clusters=min(5, len(feedbacks)), n_init=10)
     clusters = kmeans.fit_predict(embeddings)

@@ -1,23 +1,46 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from app.auth.routes import router as auth_router
 from app.feedback.routes import router as feedback_router
 from app.project.routes import router as project_router
 from fastapi.middleware.cors import CORSMiddleware
+from slowapi import _rate_limit_exceeded_handler
+from slowapi.errors import RateLimitExceeded
 import os
+import logging
 from dotenv import load_dotenv
 import uvicorn
 
+# Initialize logging first
+from app.core.logging_config import setup_logging
+setup_logging(log_level=os.getenv("LOG_LEVEL", "INFO"))
+
+logger = logging.getLogger(__name__)
 
 load_dotenv()
+
+# Import rate limiter
+from app.core.rate_limiter import limiter
+
 app = FastAPI(title="InsightAI Backend")
 
-# CORS settings
+# Add rate limiter to app state
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+
+# CORS settings - support multiple origins for deployment
 frontend_url = os.getenv("FRONTEND_URL", "http://localhost:5173")
 
-# print(frontend_url)            
-origins = [
-    frontend_url,
-]
+# Parse multiple origins if provided (comma-separated)
+origins = [origin.strip() for origin in frontend_url.split(",") if origin.strip()]
+
+# Add common localhost origins for development
+if os.getenv("ENV", "development") == "development":
+    origins.extend([
+        "http://localhost:5173",
+        "http://localhost:3000"
+    ])
+    origins = list(set(origins))  # Remove duplicates
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=origins,            
@@ -32,10 +55,29 @@ app.include_router(project_router, prefix="/api/projects", tags=["Projects"])
 
 @app.get("/")
 async def root():
+    logger.info("Root endpoint accessed")
     return {"message": "InsightAI backend is running 🚀"}
 
-# # Dynamic port binding for deployment
+@app.get("/health")
+async def health_check():
+    return {"status": "healthy"}
+
+@app.on_event("startup")
+async def startup_event():
+    logger.info("InsightAI Backend starting up...")
+    logger.info(f"Environment: {os.getenv('ENV', 'development')}")
+
+@app.on_event("shutdown")
+async def shutdown_event():
+    logger.info("InsightAI Backend shutting down...")
+
+# Dynamic port binding for deployment
 if __name__ == "__main__":
-    port = int(os.getenv("PORT", 8000)) 
-    print(port)
-    uvicorn.run("app.main:app", host="0.0.0.0", port=port, reload=True)
+    port = int(os.getenv("PORT", 8000))
+    is_dev = os.getenv("ENV", "development") == "development"
+    uvicorn.run(
+        "app.main:app", 
+        host="0.0.0.0", 
+        port=port, 
+        reload=is_dev
+    )

@@ -7,32 +7,44 @@ import { Button } from '@/components/ui/Button';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'sonner';
-import { createProject } from '@/lib/api';
+import { createProject, Project, CreateProjectPayload } from '@/lib/api';
 import { useState } from 'react';
 
+// Validation for Google Play app ID format
+const googlePlayIdRegex = /^[a-zA-Z][a-zA-Z0-9_]*(\.[a-zA-Z][a-zA-Z0-9_]*)+$/;
 
+// Validation for App Store ID format (numeric)
+const appStoreIdRegex = /^\d{6,15}$/;
 
- 
 const formSchema = z.object({
-  name: z.string().min(2, "Project name must be at least 2 characters"),
+  name: z.string().min(3, "Project name must be at least 3 characters").max(100),
   platform: z.enum(['app_store', 'play_store']),
-  appId: z.string().min(2, "App ID must be at least 2 characters"),
-  description: z.string().optional()
+  appId: z.string().min(2, "App ID is required"),
+  description: z.string().max(500).optional()
+}).refine((data) => {
+  if (data.platform === 'play_store') {
+    return googlePlayIdRegex.test(data.appId);
+  } else {
+    return appStoreIdRegex.test(data.appId);
+  }
+}, {
+  message: "Invalid app ID format",
+  path: ["appId"]
 });
 
 interface AddProjectProps {
-  onSuccess: (project: any) => void;
+  onSuccess: (project: Project) => void;
   onClose: () => void;
 }
 
 const AddProject = ({ onSuccess, onClose }: AddProjectProps) => {
-
   const [loading, setLoading] = useState(false);
-  const form = useForm({
+  
+  const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       name: "",
-      platform: "play_store",
+      platform: "play_store" as const,
       appId: "",
       description: ""
     }
@@ -42,19 +54,21 @@ const AddProject = ({ onSuccess, onClose }: AddProjectProps) => {
     try {
       setLoading(true);
       
-      const payload = {
+      const payload: CreateProjectPayload = {
         name: values.name,
-        description: values.description,
+        description: values.description || undefined,
         [values.platform === 'play_store' 
             ? 'google_play_app_id' 
             : 'app_store_app_id']: values.appId
-    };
+      };
     
-    const newProject = await createProject(payload);
+      const newProject = await createProject(payload);
       onSuccess(newProject);
       toast.success('Project created successfully!');
+      form.reset();
     } catch (error) {
-      toast.error('Failed to create project');
+      const message = error instanceof Error ? error.message : 'Failed to create project';
+      toast.error(message);
     } finally {
       setLoading(false);
     }
